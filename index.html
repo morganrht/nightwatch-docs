@@ -1,0 +1,1121 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>NIGHTWATCH — Documentation</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg:      #09090F;
+  --surface: #0E0E18;
+  --card:    #12121E;
+  --card2:   #16162A;
+  --border:  #1E1E30;
+  --violet:  #8B5CF6;
+  --cyan:    #0EA5E9;
+  --white:   #F2F2F2;
+  --muted:   #8585A0;
+  --green:   #22C55E;
+  --amber:   #F59E0B;
+  --red:     #EF4444;
+  --nav-h:   64px;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+html{scroll-behavior:smooth}
+body{
+  background:radial-gradient(circle at 30% 10%,rgba(19,38,83,.94),rgba(8,11,24,1) 70%),
+             linear-gradient(180deg,rgba(16,24,47,.95),rgba(10,15,36,.95));
+  background-attachment:fixed;
+  color:var(--white);
+  font-family:'Inter',system-ui,sans-serif;
+  min-height:100vh;
+}
+
+/* ── TOAST ── */
+#toast{
+  position:fixed;bottom:24px;left:50%;transform:translateX(-50%) translateY(80px);
+  background:var(--violet);color:#fff;padding:10px 20px;border-radius:999px;
+  font-size:13px;font-weight:600;z-index:9000;
+  transition:transform .35s cubic-bezier(.34,1.56,.64,1),opacity .35s;
+  opacity:0;pointer-events:none;white-space:nowrap;
+}
+#toast.show{transform:translateX(-50%) translateY(0);opacity:1}
+
+/* ── TOP NAV ── */
+.top-nav{
+  position:sticky;top:0;z-index:500;
+  height:var(--nav-h);
+  background:rgba(9,9,15,.85);
+  backdrop-filter:blur(20px);
+  border-bottom:1px solid var(--border);
+  display:flex;align-items:center;
+  padding:0 24px;gap:0;
+}
+.top-nav::before{
+  content:'';position:absolute;top:0;left:0;right:0;height:2px;
+  background:linear-gradient(90deg,var(--violet),var(--cyan));
+}
+.nav-logo{
+  font-size:16px;font-weight:800;
+  background:linear-gradient(135deg,var(--violet),var(--cyan));
+  -webkit-background-clip:text;-webkit-text-fill-color:transparent;
+  background-clip:text;
+  margin-right:32px;white-space:nowrap;flex-shrink:0;
+}
+.nav-tabs{display:flex;gap:4px;flex:1}
+.nav-tab{
+  padding:8px 18px;border-radius:10px;border:none;cursor:pointer;
+  font-family:'Inter',sans-serif;font-size:13px;font-weight:600;
+  background:transparent;color:var(--muted);
+  transition:all .2s;white-space:nowrap;
+}
+.nav-tab:hover{background:rgba(255,255,255,.05);color:var(--white)}
+.nav-tab.active{background:rgba(139,92,246,.2);color:var(--violet);border:1px solid rgba(139,92,246,.3)}
+.nav-lock{
+  margin-left:auto;display:flex;align-items:center;gap:8px;
+  font-size:12px;color:var(--muted);flex-shrink:0;
+}
+.lock-status{
+  display:flex;align-items:center;gap:6px;
+  padding:6px 12px;border-radius:999px;
+  border:1px solid var(--border);cursor:pointer;
+  transition:all .2s;
+}
+.lock-status:hover{border-color:var(--violet);color:var(--violet)}
+.lock-status.unlocked{border-color:rgba(34,197,94,.4);color:var(--green)}
+
+/* ── PAGES ── */
+.page{display:none;animation:fade-in .3s ease}
+.page.active{display:block}
+@keyframes fade-in{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:translateY(0)}}
+
+/* ── PAGE HEADER ── */
+.page-header{
+  padding:48px 40px 36px;position:relative;overflow:hidden;
+  background:rgba(139,92,246,.05);border-bottom:1px solid var(--border);
+}
+.page-header::after{
+  content:attr(data-bg);
+  position:absolute;right:-10px;top:50%;transform:translateY(-50%);
+  font-size:100px;font-weight:800;
+  color:rgba(139,92,246,.04);letter-spacing:-2px;
+  pointer-events:none;white-space:nowrap;
+}
+.doc-num{font-size:11px;font-weight:700;letter-spacing:3px;color:var(--violet);text-transform:uppercase;margin-bottom:12px}
+.doc-title{font-size:36px;font-weight:800;line-height:1.1;margin-bottom:6px;
+  background:linear-gradient(135deg,var(--white),var(--muted));
+  -webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text}
+.doc-sub{font-size:15px;color:var(--cyan);font-weight:500;margin-bottom:20px}
+.doc-meta{font-size:12px;color:var(--muted);display:flex;gap:20px;flex-wrap:wrap}
+.doc-meta span{display:flex;align-items:center;gap:6px}
+.dot{width:6px;height:6px;border-radius:50%;background:var(--violet);display:inline-block}
+
+/* ── CONTAINER ── */
+.container{max-width:960px;margin:0 auto;padding:40px 24px}
+@media(max-width:600px){.container{padding:24px 16px}}
+
+/* ── SECTION ── */
+.section{margin-bottom:44px}
+.section-hd{
+  display:flex;align-items:center;gap:12px;
+  margin-bottom:20px;padding-bottom:10px;
+  border-bottom:1px solid var(--border);position:relative;
+}
+.section-hd::before{
+  content:'';position:absolute;bottom:-1px;left:0;
+  width:60px;height:2px;
+  background:linear-gradient(90deg,var(--violet),var(--cyan));
+}
+.section-icon{
+  width:36px;height:36px;border-radius:10px;
+  background:rgba(139,92,246,.15);border:1px solid rgba(139,92,246,.3);
+  display:flex;align-items:center;justify-content:center;font-size:16px;flex-shrink:0;
+}
+.section-title{font-size:17px;font-weight:700;color:var(--white)}
+.section-title em{color:var(--cyan);font-style:normal}
+
+/* ── CARD ── */
+.card{
+  background:rgba(255,255,255,.03);border:1px solid var(--border);
+  border-radius:14px;padding:20px 22px;margin-bottom:12px;
+}
+.card p{font-size:13.5px;line-height:1.7;color:var(--white)}
+
+/* ── BULLET LIST ── */
+.blist{list-style:none;display:flex;flex-direction:column;gap:8px}
+.blist li{display:flex;align-items:flex-start;gap:10px;font-size:13.5px;line-height:1.6}
+.blist li::before{content:'▸';color:var(--violet);flex-shrink:0;margin-top:1px;font-size:12px}
+.blist li b{color:var(--cyan)}
+
+/* ── GRID PHILO ── */
+.philo-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:12px}
+@media(max-width:500px){.philo-grid{grid-template-columns:1fr}}
+.philo-card{background:rgba(255,255,255,.03);border:1px solid var(--border);border-radius:14px;padding:18px 20px}
+.philo-card .emoji{font-size:22px;margin-bottom:8px}
+.philo-card .lbl{font-size:12px;font-weight:700;color:var(--violet);margin-bottom:4px}
+.philo-card .dsc{font-size:12.5px;color:var(--muted);line-height:1.5}
+
+/* ── TABLE ── */
+.tbl-wrap{overflow-x:auto;border-radius:12px;border:1px solid var(--border);margin-bottom:16px}
+table{width:100%;border-collapse:collapse}
+thead tr{background:rgba(13,13,31,.8);border-bottom:1px solid var(--violet)}
+thead th{padding:11px 14px;text-align:left;font-size:10.5px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;color:var(--cyan)}
+tbody tr{border-bottom:1px solid var(--border)}
+tbody tr:nth-child(odd){background:rgba(9,9,15,.6)}
+tbody tr:nth-child(even){background:rgba(14,14,24,.6)}
+tbody tr:last-child{border-bottom:none}
+tbody td{padding:10px 14px;font-size:13px;color:var(--white);line-height:1.5;vertical-align:middle}
+tbody td:first-child{color:var(--muted);font-size:12px}
+.tag{display:inline-block;padding:2px 8px;border-radius:999px;font-size:11px;font-weight:600}
+.tv{background:rgba(139,92,246,.2);color:var(--violet);border:1px solid rgba(139,92,246,.3)}
+.tc{background:rgba(14,165,233,.2);color:var(--cyan);border:1px solid rgba(14,165,233,.3)}
+.tg{background:rgba(34,197,94,.2);color:var(--green);border:1px solid rgba(34,197,94,.3)}
+.ta{background:rgba(245,158,11,.2);color:var(--amber);border:1px solid rgba(245,158,11,.3)}
+
+/* ── CODE INLINE ── */
+code{font-family:'Courier New',monospace;font-size:12px;color:var(--cyan);
+  background:rgba(14,165,233,.1);padding:2px 6px;border-radius:4px}
+pre{background:var(--card);border:1px solid var(--border);border-radius:10px;
+  padding:14px 16px;font-family:'Courier New',monospace;font-size:12px;
+  color:var(--cyan);overflow-x:auto;line-height:1.6;margin-bottom:12px}
+
+/* ══════════════════════════════════════════════════════
+   COULEURS CLIQUABLES
+══════════════════════════════════════════════════════ */
+.colors-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(160px,1fr));gap:12px;margin-bottom:16px}
+.color-card{
+  background:rgba(255,255,255,.03);border:1px solid var(--border);
+  border-radius:14px;overflow:hidden;cursor:pointer;
+  transition:transform .15s,border-color .2s;
+  position:relative;
+}
+.color-card:hover{transform:translateY(-2px);border-color:rgba(139,92,246,.4)}
+.color-card:hover .copy-hint{opacity:1}
+.color-swatch{height:72px;width:100%;position:relative}
+.copy-hint{
+  position:absolute;inset:0;display:flex;align-items:center;justify-content:center;
+  background:rgba(0,0,0,.45);font-size:11px;font-weight:700;color:#fff;
+  letter-spacing:.5px;opacity:0;transition:opacity .2s;
+  backdrop-filter:blur(2px);
+}
+.color-info{padding:10px 12px}
+.color-name{font-size:12px;font-weight:700;color:var(--white);margin-bottom:2px}
+.color-hex{font-family:'Courier New',monospace;font-size:11px;color:var(--muted)}
+.color-role{font-size:10.5px;color:var(--muted);margin-top:2px}
+
+/* ── TYPO TABLE ── */
+.typo-demo{
+  display:flex;flex-direction:column;gap:8px;
+  background:var(--card);border:1px solid var(--border);border-radius:12px;padding:20px;margin-bottom:16px;
+}
+.typo-row{display:flex;align-items:center;gap:16px;padding:10px 0;border-bottom:1px solid var(--border)}
+.typo-row:last-child{border-bottom:none}
+.typo-sample{flex:1;min-width:0}
+.typo-meta{font-size:11px;color:var(--muted);text-align:right;flex-shrink:0;line-height:1.6;white-space:nowrap}
+
+/* ── GLASS DEMO ── */
+.glass-demo{
+  background:rgba(255,255,255,.03);
+  backdrop-filter:blur(20px);
+  border:1px solid rgba(255,255,255,.1);
+  border-radius:24px;padding:20px 22px;margin-bottom:12px;
+}
+.glass-demo:hover{background:rgba(255,255,255,.06);border-color:rgba(255,255,255,.2)}
+
+/* ── GLOW DEMO ── */
+.glow-demos{display:flex;gap:12px;flex-wrap:wrap;margin-bottom:12px}
+.glow-box{
+  padding:12px 24px;border-radius:12px;font-size:13px;font-weight:600;
+  border:1px solid;flex:1;min-width:140px;text-align:center;
+}
+.glow-v{
+  background:rgba(139,92,246,.15);color:var(--violet);border-color:rgba(139,92,246,.4);
+  box-shadow:0 0 20px rgba(139,92,246,.2),0 0 60px rgba(139,92,246,.1);
+}
+.glow-c{
+  background:rgba(14,165,233,.15);color:var(--cyan);border-color:rgba(14,165,233,.4);
+  box-shadow:0 0 20px rgba(14,165,233,.2),0 0 60px rgba(14,165,233,.1);
+}
+
+/* ── STREAK TABLE ── */
+.sr-gris   td:nth-child(2){color:#6B7280;font-weight:700}
+.sr-bleu   td:nth-child(2){color:#3B82F6;font-weight:700}
+.sr-violet td:nth-child(2){color:#A855F7;font-weight:700}
+.sr-or     td:nth-child(2){color:#EAB308;font-weight:700}
+.sr-rouge  td:nth-child(2){color:#EF4444;font-weight:700}
+
+/* ══════════════════════════════════════════════════════
+   ZONES PROTÉGÉES
+══════════════════════════════════════════════════════ */
+.protected-wrapper{position:relative;margin-bottom:16px}
+.protected-zone{border-radius:14px;overflow:hidden;transition:filter .5s ease}
+.protected-zone.locked{filter:blur(8px);user-select:none;pointer-events:none}
+.lock-overlay{
+  position:absolute;inset:0;z-index:10;
+  display:flex;flex-direction:column;align-items:center;justify-content:center;gap:8px;
+  background:rgba(9,9,15,.55);backdrop-filter:blur(3px);
+  border-radius:14px;border:1px solid rgba(139,92,246,.35);
+  cursor:pointer;transition:background .2s;
+}
+.lock-overlay:hover{background:rgba(9,9,15,.7)}
+.lock-icon-wrap{
+  width:50px;height:50px;border-radius:50%;
+  background:rgba(139,92,246,.2);border:1px solid rgba(139,92,246,.5);
+  display:flex;align-items:center;justify-content:center;font-size:22px;
+}
+.lock-lbl{font-size:13px;font-weight:600;color:var(--violet)}
+.lock-hint2{font-size:11px;color:var(--muted)}
+
+/* ── MODAL ── */
+.modal-backdrop{
+  display:none;position:fixed;inset:0;z-index:1000;
+  background:rgba(0,0,0,.75);backdrop-filter:blur(14px);
+  align-items:center;justify-content:center;
+}
+.modal-backdrop.open{display:flex}
+.modal{
+  background:var(--card);border:1px solid var(--border);border-radius:24px;
+  padding:36px 32px;width:90%;max-width:400px;text-align:center;
+  box-shadow:0 40px 80px rgba(0,0,0,.6),0 0 0 1px rgba(139,92,246,.2);
+  animation:modal-in .3s cubic-bezier(.34,1.56,.64,1);
+}
+@keyframes modal-in{from{opacity:0;transform:scale(.88) translateY(20px)}to{opacity:1;transform:scale(1) translateY(0)}}
+.modal-icon-wrap{
+  width:64px;height:64px;border-radius:50%;
+  background:rgba(139,92,246,.15);border:1px solid rgba(139,92,246,.4);
+  display:flex;align-items:center;justify-content:center;font-size:28px;
+  margin:0 auto 20px;
+}
+.modal h2{font-size:20px;font-weight:700;color:var(--white);margin-bottom:8px}
+.modal p{font-size:13px;color:var(--muted);margin-bottom:24px;line-height:1.5}
+.modal input{
+  width:100%;background:rgba(255,255,255,.05);border:1px solid var(--border);
+  border-radius:12px;padding:14px 18px;font-size:18px;font-family:inherit;
+  color:var(--white);text-align:center;letter-spacing:6px;
+  outline:none;margin-bottom:10px;transition:border-color .2s;
+}
+.modal input:focus{border-color:var(--violet)}
+.modal input.err{border-color:var(--red);animation:shake .3s ease}
+@keyframes shake{0%,100%{transform:translateX(0)}25%{transform:translateX(-8px)}75%{transform:translateX(8px)}}
+.modal-err{font-size:12px;color:var(--red);min-height:18px;margin-bottom:10px}
+.btn-unlock{
+  width:100%;background:linear-gradient(135deg,var(--violet),var(--cyan));
+  border:none;border-radius:12px;padding:14px;font-size:14px;font-weight:700;
+  color:#fff;cursor:pointer;font-family:inherit;transition:opacity .2s,transform .1s;
+}
+.btn-unlock:hover{opacity:.9}
+.btn-unlock:active{transform:scale(.98)}
+.btn-cancel{
+  background:none;border:none;color:var(--muted);font-size:13px;
+  cursor:pointer;font-family:inherit;margin-top:10px;padding:8px;width:100%;
+}
+.btn-cancel:hover{color:var(--white)}
+
+/* ── FOOTER ── */
+.footer{
+  text-align:center;padding:32px 24px;
+  border-top:1px solid var(--border);
+  font-size:12px;color:var(--muted);margin-top:20px;
+}
+
+/* ══════════════════════════════════════════════════════
+   RESPONSIVE MOBILE
+══════════════════════════════════════════════════════ */
+
+/* Tablette */
+@media(max-width:768px){
+  .page-header{padding:36px 28px 28px}
+  .doc-title{font-size:28px}
+  .colors-grid{grid-template-columns:repeat(auto-fill,minmax(140px,1fr))}
+}
+
+/* Mobile */
+@media(max-width:640px){
+  /* ── Nav ── */
+  .top-nav{
+    height:auto;
+    flex-wrap:wrap;
+    padding:10px 14px 6px;
+    gap:6px;
+    row-gap:6px;
+  }
+  .nav-logo{font-size:13px;margin-right:6px;order:0}
+  .nav-lock{order:1;margin-left:auto}
+  .nav-tabs{order:2;width:100%;gap:4px;padding-bottom:4px}
+  .nav-tab{padding:7px 0;font-size:12px;flex:1;text-align:center;border-radius:8px}
+  #lockText{display:none}
+  .lock-status{padding:5px 10px}
+
+  /* ── Page header ── */
+  .page-header{padding:22px 18px 18px}
+  .page-header::after{font-size:56px;right:-4px}
+  .doc-num{font-size:10px;letter-spacing:2px}
+  .doc-title{font-size:20px}
+  .doc-sub{font-size:12px;margin-bottom:14px}
+  .doc-meta{font-size:11px;gap:10px}
+
+  /* ── Section ── */
+  .section-title{font-size:15px}
+  .section-icon{width:30px;height:30px;font-size:14px;border-radius:8px}
+
+  /* ── Typo demo ── */
+  .typo-row{flex-direction:column;gap:2px;align-items:flex-start;padding:8px 0}
+  .typo-meta{text-align:left;white-space:normal;font-size:10px;color:var(--violet)}
+
+  /* ── Cards ── */
+  .card{padding:16px 16px}
+  .card p{font-size:13px}
+  .philo-card{padding:14px 16px}
+
+  /* ── Glow boxes ── */
+  .glow-box{min-width:120px;padding:10px 16px;font-size:12px}
+
+  /* ── Tables ── */
+  thead th{font-size:9px;padding:9px 10px}
+  tbody td{font-size:12px;padding:8px 10px}
+  tbody td:first-child{font-size:11px}
+
+  /* ── Modal ── */
+  .modal{padding:28px 20px;border-radius:20px}
+  .modal h2{font-size:17px}
+  .modal p{font-size:12px;margin-bottom:18px}
+
+  /* ── Pre / code ── */
+  pre{font-size:11px;padding:12px 14px}
+}
+
+/* Très petit mobile */
+@media(max-width:380px){
+  .nav-logo{font-size:11px}
+  .nav-tab{font-size:10px;padding:6px 0}
+  .doc-title{font-size:18px}
+  .colors-grid{grid-template-columns:repeat(auto-fill,minmax(130px,1fr))}
+  tbody td{font-size:11px}
+}
+.footer em{color:var(--violet);font-style:normal}
+
+/* ── GRADIENT BG PREVIEW ── */
+.bg-preview{
+  width:100%;height:100px;border-radius:12px;margin-bottom:12px;
+  background:radial-gradient(circle at 30% 10%,rgba(19,38,83,.94),rgba(8,11,24,1) 70%),
+             linear-gradient(180deg,rgba(16,24,47,.95),rgba(10,15,36,.95));
+  border:1px solid var(--border);
+  display:flex;align-items:center;justify-content:center;
+  font-size:12px;color:var(--muted);
+}
+</style>
+</head>
+<body>
+
+<div id="toast">✓ Copié !</div>
+
+<!-- ══════════════════════════════════════════════════ TOP NAV -->
+<nav class="top-nav">
+  <div class="nav-logo">◈ NIGHTWATCH</div>
+  <div class="nav-tabs">
+    <button class="nav-tab active" onclick="showPage('charte',this)">🎨 Charte Graphique</button>
+    <button class="nav-tab" onclick="showPage('debrief',this)">📋 Débrief App</button>
+  </div>
+  <div class="nav-lock">
+    <div class="lock-status" id="lockStatus" onclick="openModal()">
+      <span id="lockIcon">🔒</span>
+      <span id="lockText">Protégé</span>
+    </div>
+  </div>
+</nav>
+
+<!-- ══════════════════════════════════════════════════════════════════════
+     PAGE 1 : CHARTE GRAPHIQUE
+══════════════════════════════════════════════════════════════════════ -->
+<div class="page active" id="page-charte">
+  <div class="page-header" data-bg="DESIGN">
+    <div class="doc-num">Document 01 · Charte Graphique</div>
+    <div class="doc-title">Identité Visuelle</div>
+    <div class="doc-sub">Couleurs · Typographie · Composants · Effets</div>
+    <div class="doc-meta">
+      <span><span class="dot"></span> Cliquer sur une couleur pour copier le code hex</span>
+      <span><span class="dot" style="background:var(--cyan)"></span> 21 mars 2026</span>
+    </div>
+  </div>
+
+  <div class="container">
+
+    <!-- IDENTITÉ -->
+    <div class="section">
+      <div class="section-hd">
+        <div class="section-icon">🌙</div>
+        <div class="section-title">Identité <em>Visuelle</em></div>
+      </div>
+      <div class="card">
+        <p><strong>Nightwatch</strong> est une application mobile-first (PWA) à l'esthétique sombre et futuriste. Le parti pris graphique est le <strong>glassmorphisme</strong> : des surfaces semi-transparentes, des flous, des reflets lumineux — comme si l'interface flottait dans la nuit.</p>
+      </div>
+      <div class="bg-preview">Fond d'écran body — radial-gradient + linear-gradient</div>
+      <pre>background:
+  radial-gradient(circle at 30% 10%, rgba(19,38,83,0.94), rgba(8,11,24,1) 70%),
+  linear-gradient(180deg, rgba(16,24,47,0.95), rgba(10,15,36,0.95));</pre>
+    </div>
+
+    <!-- COULEURS PRINCIPALES -->
+    <div class="section">
+      <div class="section-hd">
+        <div class="section-icon">🎨</div>
+        <div class="section-title">Palette — <em>Principales</em></div>
+      </div>
+      <div class="colors-grid">
+        <div class="color-card" onclick="copyColor('#8B5CF6','Violet Neon')">
+          <div class="color-swatch" style="background:#8B5CF6">
+            <div class="copy-hint">COPIER</div>
+          </div>
+          <div class="color-info">
+            <div class="color-name">Violet Neon</div>
+            <div class="color-hex">#8B5CF6</div>
+            <div class="color-role">Primaire · hsl(263,90%,66%)</div>
+          </div>
+        </div>
+        <div class="color-card" onclick="copyColor('#0EA5E9','Cyan Electro')">
+          <div class="color-swatch" style="background:#0EA5E9">
+            <div class="copy-hint">COPIER</div>
+          </div>
+          <div class="color-info">
+            <div class="color-name">Cyan Electro</div>
+            <div class="color-hex">#0EA5E9</div>
+            <div class="color-role">Accent · hsl(188,86%,43%)</div>
+          </div>
+        </div>
+        <div class="color-card" onclick="copyColor('#09090F','Nuit Profonde')">
+          <div class="color-swatch" style="background:#09090F;border:1px solid #1E1E30">
+            <div class="copy-hint">COPIER</div>
+          </div>
+          <div class="color-info">
+            <div class="color-name">Nuit Profonde</div>
+            <div class="color-hex">#09090F</div>
+            <div class="color-role">Background · hsl(240,10%,3.9%)</div>
+          </div>
+        </div>
+        <div class="color-card" onclick="copyColor('#0E0E18','Nuit Douce')">
+          <div class="color-swatch" style="background:#0E0E18;border:1px solid #1E1E30">
+            <div class="copy-hint">COPIER</div>
+          </div>
+          <div class="color-info">
+            <div class="color-name">Nuit Douce</div>
+            <div class="color-hex">#0E0E18</div>
+            <div class="color-role">Card / Surface · hsl(240,10%,6%)</div>
+          </div>
+        </div>
+        <div class="color-card" onclick="copyColor('#F2F2F2','Blanc Doux')">
+          <div class="color-swatch" style="background:#F2F2F2">
+            <div class="copy-hint" style="color:#333">COPIER</div>
+          </div>
+          <div class="color-info">
+            <div class="color-name">Blanc Doux</div>
+            <div class="color-hex">#F2F2F2</div>
+            <div class="color-role">Texte principal · hsl(0,0%,95%)</div>
+          </div>
+        </div>
+        <div class="color-card" onclick="copyColor('#8585A0','Gris Bleuté')">
+          <div class="color-swatch" style="background:#8585A0">
+            <div class="copy-hint">COPIER</div>
+          </div>
+          <div class="color-info">
+            <div class="color-name">Gris Bleuté</div>
+            <div class="color-hex">#8585A0</div>
+            <div class="color-role">Texte secondaire · hsl(240,5%,55%)</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- COULEURS SÉMANTIQUES -->
+    <div class="section">
+      <div class="section-hd">
+        <div class="section-icon">🚦</div>
+        <div class="section-title">Palette — <em>Sémantiques</em></div>
+      </div>
+      <div class="colors-grid">
+        <div class="color-card" onclick="copyColor('#22C55E','Vert Menthe')">
+          <div class="color-swatch" style="background:#22C55E"><div class="copy-hint">COPIER</div></div>
+          <div class="color-info">
+            <div class="color-name">Vert Menthe</div>
+            <div class="color-hex">#22C55E</div>
+            <div class="color-role">Succès / Safe · hsl(142,71%,45%)</div>
+          </div>
+        </div>
+        <div class="color-card" onclick="copyColor('#F59E0B','Ambre')">
+          <div class="color-swatch" style="background:#F59E0B"><div class="copy-hint">COPIER</div></div>
+          <div class="color-info">
+            <div class="color-name">Ambre</div>
+            <div class="color-hex">#F59E0B</div>
+            <div class="color-role">Avertissement · hsl(38,92%,50%)</div>
+          </div>
+        </div>
+        <div class="color-card" onclick="copyColor('#EF4444','Rouge Alerte')">
+          <div class="color-swatch" style="background:#EF4444"><div class="copy-hint">COPIER</div></div>
+          <div class="color-info">
+            <div class="color-name">Rouge Alerte</div>
+            <div class="color-hex">#EF4444</div>
+            <div class="color-role">Danger · hsl(0,84%,60%)</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- COULEURS STREAK -->
+    <div class="section">
+      <div class="section-hd">
+        <div class="section-icon">🔥</div>
+        <div class="section-title">Palette — <em>Streak</em></div>
+      </div>
+      <div class="colors-grid">
+        <div class="color-card" onclick="copyColor('#6B7280','Gris Streak')">
+          <div class="color-swatch" style="background:#6B7280"><div class="copy-hint">COPIER</div></div>
+          <div class="color-info"><div class="color-name">Pas de flamme</div><div class="color-hex">#6B7280</div><div class="color-role">0 semaine</div></div>
+        </div>
+        <div class="color-card" onclick="copyColor('#3B82F6','Flamme Bleue')">
+          <div class="color-swatch" style="background:#3B82F6"><div class="copy-hint">COPIER</div></div>
+          <div class="color-info"><div class="color-name">Flamme Bleue</div><div class="color-hex">#3B82F6</div><div class="color-role">1–2 semaines</div></div>
+        </div>
+        <div class="color-card" onclick="copyColor('#A855F7','Flamme Pourpre')">
+          <div class="color-swatch" style="background:#A855F7"><div class="copy-hint">COPIER</div></div>
+          <div class="color-info"><div class="color-name">Flamme Pourpre</div><div class="color-hex">#A855F7</div><div class="color-role">3–4 semaines</div></div>
+        </div>
+        <div class="color-card" onclick="copyColor('#EAB308','Flamme Dorée')">
+          <div class="color-swatch" style="background:#EAB308"><div class="copy-hint">COPIER</div></div>
+          <div class="color-info"><div class="color-name">Flamme Dorée</div><div class="color-hex">#EAB308</div><div class="color-role">5–9 semaines</div></div>
+        </div>
+        <div class="color-card" onclick="copyColor('#EF4444','Flamme Légendaire')">
+          <div class="color-swatch" style="background:#EF4444"><div class="copy-hint">COPIER</div></div>
+          <div class="color-info"><div class="color-name">Flamme Légendaire</div><div class="color-hex">#EF4444</div><div class="color-role">10+ semaines</div></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- DÉGRADÉ SIGNATURE -->
+    <div class="section">
+      <div class="section-hd">
+        <div class="section-icon">✨</div>
+        <div class="section-title">Dégradé <em>Signature</em></div>
+      </div>
+      <div class="color-card" style="cursor:pointer" onclick="copyColor('linear-gradient(135deg,#8B5CF6,#0EA5E9)','Dégradé Signature')">
+        <div class="color-swatch" style="background:linear-gradient(135deg,#8B5CF6,#0EA5E9);height:80px">
+          <div class="copy-hint">COPIER CSS</div>
+        </div>
+        <div class="color-info">
+          <div class="color-name">Violet → Cyan</div>
+          <div class="color-hex">linear-gradient(135deg, #8B5CF6, #0EA5E9)</div>
+          <div class="color-role">Avatars actifs · Cadres premium · CTA principaux</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- GLASSMORPHISME -->
+    <div class="section">
+      <div class="section-hd">
+        <div class="section-icon">🪟</div>
+        <div class="section-title">Glassmorphisme</div>
+      </div>
+      <div class="glass-demo">
+        <p style="font-size:13px;color:var(--muted)">Aperçu d'une glass-card — fond : rgba(255,255,255, 0.03) · blur(20px)</p>
+      </div>
+      <div class="tbl-wrap">
+        <table>
+          <thead><tr><th>Propriété</th><th>Défaut</th><th>Hover</th></tr></thead>
+          <tbody>
+            <tr><td>background</td><td><code>rgba(255,255,255, 0.03)</code></td><td><code>rgba(255,255,255, 0.06)</code></td></tr>
+            <tr><td>border</td><td><code>rgba(255,255,255, 0.10)</code></td><td><code>rgba(255,255,255, 0.20)</code></td></tr>
+            <tr><td>backdrop-filter</td><td><code>blur(20px)</code></td><td><code>blur(20px)</code></td></tr>
+            <tr><td>border-radius</td><td><code>24px (1.5rem)</code></td><td><code>24px</code></td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- TYPOGRAPHIE -->
+    <div class="section">
+      <div class="section-hd">
+        <div class="section-icon">Aa</div>
+        <div class="section-title">Typographie — <em>Inter</em></div>
+      </div>
+      <div class="card" style="margin-bottom:16px">
+        <p><strong>Police :</strong> Inter (Google Fonts) — poids 300 / 400 / 500 / 600 / 700 / 800<br>
+        <strong>Fallback :</strong> system-ui, -apple-system, BlinkMacSystemFont, Segoe UI, sans-serif</p>
+      </div>
+      <div class="typo-demo">
+        <div class="typo-row">
+          <div class="typo-sample"><span style="font-size:24px;font-weight:800;background:linear-gradient(135deg,var(--violet),var(--cyan));-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text">Nightwatch</span></div>
+          <div class="typo-meta">800 · 24px<br>Titre principal</div>
+        </div>
+        <div class="typo-row">
+          <div class="typo-sample"><span style="font-size:18px;font-weight:700;color:var(--white)">Soirée d'été</span></div>
+          <div class="typo-meta">700 · 18px<br>Heading</div>
+        </div>
+        <div class="typo-row">
+          <div class="typo-sample"><span style="font-size:14px;font-weight:600;color:var(--cyan)">Section titre</span></div>
+          <div class="typo-meta">600 · 14px<br>Sous-titre</div>
+        </div>
+        <div class="typo-row">
+          <div class="typo-sample"><span style="font-size:14px;font-weight:400;color:var(--white)">Corps de texte normal, taille standard de l'interface.</span></div>
+          <div class="typo-meta">400 · 14px<br>Corps</div>
+        </div>
+        <div class="typo-row">
+          <div class="typo-sample"><span style="font-size:12px;font-weight:500;color:var(--muted)">Label chip tag</span></div>
+          <div class="typo-meta">500 · 12px<br>Label</div>
+        </div>
+        <div class="typo-row">
+          <div class="typo-sample"><span style="font-size:10px;font-weight:400;color:var(--muted)">22:45 · 0.42 g/L · il y a 3 min</span></div>
+          <div class="typo-meta">400 · 10px<br>Micro-texte</div>
+        </div>
+        <div class="typo-row">
+          <div class="typo-sample"><code style="font-size:13px">AB12C3</code></div>
+          <div class="typo-meta">Courier New<br>Code soirée</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- EFFETS LUMINEUX -->
+    <div class="section">
+      <div class="section-hd">
+        <div class="section-icon">💫</div>
+        <div class="section-title">Effets <em>Neon Glow</em></div>
+      </div>
+      <div class="glow-demos">
+        <div class="glow-box glow-v">Violet Neon Glow</div>
+        <div class="glow-box glow-c">Cyan Neon Glow</div>
+      </div>
+      <pre>/* Violet */
+box-shadow: 0 0 20px hsla(263, 90%, 66%, 0.2),
+            0 0 60px hsla(263, 90%, 66%, 0.1);
+
+/* Cyan */
+box-shadow: 0 0 20px hsla(188, 86%, 43%, 0.2),
+            0 0 60px hsla(188, 86%, 43%, 0.1);</pre>
+    </div>
+
+    <!-- ANIMATIONS -->
+    <div class="section">
+      <div class="section-hd">
+        <div class="section-icon">⚡</div>
+        <div class="section-title">Animations <em>& Transitions</em></div>
+      </div>
+      <div class="tbl-wrap">
+        <table>
+          <thead><tr><th>Nom</th><th>Déclencheur</th><th>Description</th></tr></thead>
+          <tbody>
+            <tr><td>Entrée composant</td><td>Montage React</td><td>opacity 0→1 + translateY(10px→0), 200ms</td></tr>
+            <tr><td>Modale</td><td>Ouverture</td><td>slide-up depuis le bas, spring damping 25, stiffness 300</td></tr>
+            <tr><td>Tap mobile</td><td>Toucher / clic</td><td>whileTap: &#123; scale: 0.9 &#125; via Framer Motion</td></tr>
+            <tr><td>Shimmer</td><td>En boucle</td><td>translateX(0→400%), durée 1.8s, boutique / bannières</td></tr>
+            <tr><td>Pulse streak</td><td>Streak actif</td><td>animation d'opacité cyclique sur le box-shadow</td></tr>
+            <tr><td>Transition couleur</td><td>Hover / état</td><td>transition: all 0.2s ease</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- FORMES -->
+    <div class="section">
+      <div class="section-hd">
+        <div class="section-icon">⬡</div>
+        <div class="section-title">Formes <em>& Rayons</em></div>
+      </div>
+      <div class="tbl-wrap">
+        <table>
+          <thead><tr><th>Élément</th><th>border-radius</th><th>Classe Tailwind</th></tr></thead>
+          <tbody>
+            <tr><td>Global / cartes</td><td>24px (1.5rem)</td><td><code>rounded-[24px]</code></td></tr>
+            <tr><td>Boutons pill</td><td>999px</td><td><code>rounded-full</code></td></tr>
+            <tr><td>Avatars</td><td>50% (cercle)</td><td><code>rounded-full</code></td></tr>
+            <tr><td>Tags / chips</td><td>999px</td><td><code>rounded-full</code></td></tr>
+            <tr><td>Inputs</td><td>12–16px</td><td><code>rounded-xl</code></td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- ICONOGRAPHIE -->
+    <div class="section">
+      <div class="section-hd">
+        <div class="section-icon">🔷</div>
+        <div class="section-title">Iconographie <em>& Framework</em></div>
+      </div>
+      <ul class="blist">
+        <li><b>Bibliothèque :</b> Lucide React — icônes SVG consistantes et légères</li>
+        <li><b>Taille standard :</b> w-5 h-5 (20px) · w-4 h-4 (16px) pour les micro-icônes</li>
+        <li><b>Icônes custom SVG :</b> StreakDisplay (bière + flamme), ShopItems (cadres/bannières)</li>
+        <li><b>Framework CSS :</b> Tailwind CSS 3.4 + shadcn/ui</li>
+        <li><b>Animations :</b> Framer Motion 12</li>
+        <li><b>Rendu texte :</b> text-rendering: optimizeLegibility · -webkit-font-smoothing: antialiased</li>
+      </ul>
+    </div>
+
+  </div><!-- /container charte -->
+</div><!-- /page charte -->
+
+<!-- ══════════════════════════════════════════════════════════════════════
+     PAGE 2 : DÉBRIEF APPLICATION
+══════════════════════════════════════════════════════════════════════ -->
+<div class="page" id="page-debrief">
+  <div class="page-header" data-bg="APP">
+    <div class="doc-num">Document 02 · Débrief Application</div>
+    <div class="doc-title">Présentation Complète</div>
+    <div class="doc-sub">Fonctionnalités · Stack · Base de données</div>
+    <div class="doc-meta">
+      <span><span class="dot" style="background:var(--amber)"></span> Sections sensibles protégées par mot de passe</span>
+      <span><span class="dot" style="background:var(--cyan)"></span> 21 mars 2026</span>
+    </div>
+  </div>
+
+  <div class="container">
+
+    <!-- QU'EST-CE QUE NIGHTWATCH -->
+    <div class="section">
+      <div class="section-hd">
+        <div class="section-icon">🌙</div>
+        <div class="section-title">Qu'est-ce que <em>Nightwatch</em> ?</div>
+      </div>
+      <div class="card">
+        <p><strong>Nightwatch</strong> est une application mobile (PWA — Progressive Web App) conçue pour accompagner les soirées entre amis de façon intelligente, sociale et responsable.</p>
+        <br>
+        <p>Elle permet de suivre sa consommation d'alcool en temps réel, de partager des moments avec ses amis dans le contexte d'une soirée, et de garder un œil bienveillant sur le groupe. Installable sur l'écran d'accueil iOS et Android, sans passer par un store.</p>
+      </div>
+    </div>
+
+    <!-- PHILOSOPHIE -->
+    <div class="section">
+      <div class="section-hd">
+        <div class="section-icon">💡</div>
+        <div class="section-title">Philosophie</div>
+      </div>
+      <div class="philo-grid">
+        <div class="philo-card"><div class="emoji">👥</div><div class="lbl">Social</div><div class="dsc">Tout tourne autour du groupe. On crée ou rejoint une soirée, on voit ce que font ses amis en temps réel.</div></div>
+        <div class="philo-card"><div class="emoji">🛡️</div><div class="lbl">Responsable</div><div class="dsc">L'alcoolémie estimée est affichée en permanence, avec alertes si quelqu'un dépasse un seuil dangereux.</div></div>
+        <div class="philo-card"><div class="emoji">🎮</div><div class="lbl">Fun</div><div class="dsc">Badges, streaks, classements, stories — l'app gamifie la soirée sans la rendre anxiogène.</div></div>
+        <div class="philo-card"><div class="emoji">🔒</div><div class="lbl">Privé</div><div class="dsc">Chaque utilisateur contrôle ce qu'il partage — masquer son alcoolémie du classement, etc.</div></div>
+      </div>
+    </div>
+
+    <!-- ACCUEIL -->
+    <div class="section">
+      <div class="section-hd"><div class="section-icon">🏠</div><div class="section-title">Fonctionnalités — <em>Accueil</em></div></div>
+      <ul class="blist">
+        <li><b>Jauge BAC :</b> alcoolémie estimée en g/L, recalcul toutes les 30s selon poids, genre et consommations.</li>
+        <li><b>Graphique BAC :</b> courbe d'évolution de l'alcoolémie dans le temps.</li>
+        <li><b>Ajout de verre :</b> sélecteur 28 boissons en 5 catégories + volumes prédéfinis + personnalisé.</li>
+        <li><b>Scanner IA :</b> photo d'une bouteille → détection Mistral Pixtral (nom, volume, ABV). Tout éditable.</li>
+        <li><b>Actions d'urgence :</b> appel contact d'urgence, événement quiche (malaise), événement bisou.</li>
+        <li><b>Fil d'activité :</b> liste chronologique, suppression unitaire (hover) et en masse (menu Gérer).</li>
+        <li><b>Alertes BAC :</b> bandeau rouge si &gt; 1.0 g/L pour l'utilisateur ou un membre de la soirée.</li>
+        <li><b>Stories :</b> barre horizontale, viewer plein écran, navigation tap/swipe, safe area iPhone.</li>
+      </ul>
+    </div>
+
+    <!-- SOIRÉE -->
+    <div class="section">
+      <div class="section-hd"><div class="section-icon">🎉</div><div class="section-title">Fonctionnalités — <em>Soirée</em></div></div>
+      <ul class="blist">
+        <li><b>Créer une soirée :</b> génère un code unique à 6 caractères à partager.</li>
+        <li><b>Rejoindre :</b> saisir le code d'une soirée existante.</li>
+        <li><b>Photos partagées :</b> galerie photo de soirée avec légende.</li>
+        <li><b>Carte des membres :</b> localisation GPS en temps réel (60s, 30s si BAC critique).</li>
+        <li><b>Invitations :</b> inviter un ami, accepter / refuser les invitations reçues.</li>
+        <li><b>Quitter :</b> propose de sauvegarder les photos dans la galerie avant de partir.</li>
+        <li><b>Supprimer (admin) :</b> même proposition de sauvegarde pour l'administrateur.</li>
+      </ul>
+    </div>
+
+    <!-- TOP & AMIS -->
+    <div class="section">
+      <div class="section-hd"><div class="section-icon">🏆</div><div class="section-title">Fonctionnalités — <em>Top & Amis</em></div></div>
+      <ul class="blist">
+        <li><b>Party Kings :</b> classement par alcool total consommé, code couleur BAC.</li>
+        <li><b>Hydration Heroes :</b> classement par boissons sans alcool.</li>
+        <li><b>Quiche & Shop Kings :</b> classements malaises et bisous.</li>
+        <li><b>Toggle BAC :</b> masquer / afficher son alcoolémie dans le classement.</li>
+        <li><b>Mes amis :</b> liste avec date d'amitié, accès profil complet.</li>
+        <li><b>Suggestions :</b> contacts du téléphone présents sur l'app (API Contacts Web).</li>
+        <li><b>Demandes :</b> recherche par pseudo, badge notification, auto-accept mutuel.</li>
+      </ul>
+    </div>
+
+    <!-- BOUTIQUE -->
+    <div class="section">
+      <div class="section-hd"><div class="section-icon">🛍️</div><div class="section-title">Fonctionnalités — <em>Boutique</em></div></div>
+      <div class="tbl-wrap">
+        <table>
+          <thead><tr><th>Catégorie</th><th>Items</th><th>Type</th></tr></thead>
+          <tbody>
+            <tr><td>Cadres d'avatar</td><td>Aura Dorée, Neon Arc, Flamme Éternelle, Glace Royale, VIP Crown, Galaxy</td><td><span class="tag tv">Premium</span></td></tr>
+            <tr><td>Bannières profil</td><td>Sunset, Ocean Deep, Purple Haze, Forest Night, Cosmic, Cherry Blossom…</td><td><span class="tag tv">Premium</span></td></tr>
+            <tr><td>Item spécial</td><td>🔥 Résurrection de flamme — restaurer un streak cassé (2,99 €)</td><td><span class="tag tc">Utilitaire</span></td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- STREAK -->
+    <div class="section">
+      <div class="section-hd"><div class="section-icon">🔥</div><div class="section-title">Système de <em>Streak</em></div></div>
+      <div class="card" style="margin-bottom:14px"><p>1 soirée minimum par semaine calendaire ISO pour maintenir le streak. Affiché dans le header et sur les fiches de profil.</p></div>
+      <div class="tbl-wrap">
+        <table>
+          <thead><tr><th>Semaines</th><th>Couleur</th><th>Hex</th><th>Label</th></tr></thead>
+          <tbody>
+            <tr class="sr-gris">  <td>0</td>    <td>Gris</td>   <td><code>#6B7280</code></td><td>Pas de flamme</td></tr>
+            <tr class="sr-bleu">  <td>1–2</td>  <td>Bleu</td>   <td><code>#3B82F6</code></td><td>Flamme bleue</td></tr>
+            <tr class="sr-violet"><td>3–4</td>  <td>Violet</td> <td><code>#A855F7</code></td><td>Flamme pourpre</td></tr>
+            <tr class="sr-or">    <td>5–9</td>  <td>Or</td>     <td><code>#EAB308</code></td><td>Flamme dorée</td></tr>
+            <tr class="sr-rouge"> <td>10+</td>  <td>Rouge</td>  <td><code>#EF4444</code></td><td>Flamme légendaire</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- ALERTES -->
+    <div class="section">
+      <div class="section-hd"><div class="section-icon">🔔</div><div class="section-title">Alertes <em>& Notifications</em></div></div>
+      <ul class="blist">
+        <li><b>BAC critique (&gt; 1.0 g/L) :</b> bandeau rouge + localisation partagée plus fréquemment.</li>
+        <li><b>Membre en danger :</b> alerte rouge si un membre de la soirée dépasse 1.0 g/L.</li>
+        <li><b>Alerte hydratation :</b> rappel toutes les 5 min si ratio eau/alcool trop faible.</li>
+        <li><b>Badge Amis :</b> compteur demandes en attente sur l'onglet.</li>
+        <li><b>Badge Soirée :</b> compteur invitations en attente sur l'onglet.</li>
+      </ul>
+    </div>
+
+    <!-- ═══════════════ STACK TECHNIQUE 🔒 -->
+    <div class="section">
+      <div class="section-hd">
+        <div class="section-icon">⚙️</div>
+        <div class="section-title">Stack <em>Technique</em> &nbsp;<span class="tag ta">🔒 Protégé</span></div>
+      </div>
+      <div class="protected-wrapper">
+        <div class="protected-zone locked" id="zone-stack">
+          <div class="tbl-wrap">
+            <table>
+              <thead><tr><th>Composant</th><th>Technologie</th><th>Détails</th></tr></thead>
+              <tbody>
+                <tr><td>Frontend</td><td>React 18 + TypeScript + Vite 8</td><td><span class="tag tc">SPA</span></td></tr>
+                <tr><td>UI / Styles</td><td>Tailwind CSS 3.4 + shadcn/ui</td><td></td></tr>
+                <tr><td>Animations</td><td>Framer Motion 12</td><td></td></tr>
+                <tr><td>Backend / BDD</td><td>Supabase — PostgreSQL + Auth + Storage + Realtime</td><td><span class="tag tg">Projet perso</span></td></tr>
+                <tr><td>Déploiement</td><td>Vercel — <code>nightwatch-app.vercel.app</code></td><td><span class="tag tv">Production</span></td></tr>
+                <tr><td>Compte Vercel</td><td><code>alexismcns-projects</code></td><td></td></tr>
+                <tr><td>Paiements</td><td>Stripe Payment Links (pas d'Edge Function)</td><td></td></tr>
+                <tr><td>IA boissons</td><td>Mistral API — modèle Pixtral</td><td></td></tr>
+                <tr><td>Type d'app</td><td>PWA — installable iOS / Android</td><td></td></tr>
+                <tr><td>Auth</td><td>Supabase Auth — Email/Password + OAuth Google/Apple (à configurer)</td><td></td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+        <div class="lock-overlay" id="overlay-stack" onclick="openModal()">
+          <div class="lock-icon-wrap">🔐</div>
+          <div class="lock-lbl">Section protégée</div>
+          <div class="lock-hint2">Cliquer pour déverrouiller</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ═══════════════ BASE DE DONNÉES 🔒 -->
+    <div class="section">
+      <div class="section-hd">
+        <div class="section-icon">🗄️</div>
+        <div class="section-title">Base de <em>Données</em> &nbsp;<span class="tag ta">🔒 Protégé</span></div>
+      </div>
+      <div class="protected-wrapper">
+        <div class="protected-zone locked" id="zone-db">
+          <div class="tbl-wrap" style="margin-bottom:14px">
+            <table>
+              <thead><tr><th>Table</th><th>Description</th></tr></thead>
+              <tbody>
+                <tr><td><code>profiles</code></td><td>Profil complet — pseudo, poids, genre, réseaux, avatar_frame, banner_gradient…</td></tr>
+                <tr><td><code>parties</code></td><td>Soirées — nom, code 6 car., admin_id, created_at</td></tr>
+                <tr><td><code>party_members</code></td><td>Membres d'une soirée + colonne <code>show_bac BOOLEAN</code></td></tr>
+                <tr><td><code>drinks</code></td><td>Consommations — nom, volume_ml, abv, party_id, user_id, detected_by_ai</td></tr>
+                <tr><td><code>friendships</code></td><td>Relations — pending / accepted, auto-accept mutuel</td></tr>
+                <tr><td><code>stories</code></td><td>Stories 24h — image_url, caption, bac_at_post, party_id</td></tr>
+                <tr><td><code>party_photos</code></td><td>Photos partagées dans une soirée — image_url, caption</td></tr>
+                <tr><td><code>puke_events</code></td><td>Événements malaise (quiche) horodatés</td></tr>
+                <tr><td><code>shop_events</code></td><td>Événements bisou/shop horodatés</td></tr>
+                <tr><td><code>party_requests</code></td><td>Invitations à rejoindre une soirée</td></tr>
+                <tr><td><code>member_locations</code></td><td>Positions GPS — lat, lng, updated_at</td></tr>
+                <tr><td><code>user_purchases</code></td><td>Achats boutique — item_id, user_id, purchased_at</td></tr>
+              </tbody>
+            </table>
+          </div>
+          <div class="tbl-wrap">
+            <table>
+              <thead><tr><th>Bucket Storage</th><th>Contenu</th><th>Accès</th></tr></thead>
+              <tbody>
+                <tr><td><code>avatars</code></td><td>Photos de profil</td><td><span class="tag tg">Public</span></td></tr>
+                <tr><td><code>stories</code></td><td>Images stories (TTL 24h)</td><td><span class="tag tg">Public</span></td></tr>
+                <tr><td><code>party-photos</code></td><td>Photos de soirée</td><td><span class="tag tg">Public</span></td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+        <div class="lock-overlay" id="overlay-db" onclick="openModal()">
+          <div class="lock-icon-wrap">🔐</div>
+          <div class="lock-lbl">Section protégée</div>
+          <div class="lock-hint2">Cliquer pour déverrouiller</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ═══════════════ ACCÈS INFRA 🔒 -->
+    <div class="section">
+      <div class="section-hd">
+        <div class="section-icon">🔑</div>
+        <div class="section-title">Accès <em>Infrastructure</em> &nbsp;<span class="tag ta">🔒 Protégé</span></div>
+      </div>
+      <div class="protected-wrapper">
+        <div class="protected-zone locked" id="zone-infra">
+          <div class="tbl-wrap">
+            <table>
+              <thead><tr><th>Service</th><th>Accès / URL</th></tr></thead>
+              <tbody>
+                <tr><td>Supabase Project ID</td><td><code>vqkiypjxeazydizqhgar</code></td></tr>
+                <tr><td>Supabase URL</td><td><code>https://vqkiypjxeazydizqhgar.supabase.co</code></td></tr>
+                <tr><td>Supabase Dashboard</td><td><code>supabase.com</code> — compte perso</td></tr>
+                <tr><td>Vercel Production</td><td><code>https://nightwatch-app.vercel.app</code></td></tr>
+                <tr><td>Vercel Dashboard</td><td><code>vercel.com</code> — alexismcns-projects</td></tr>
+                <tr><td>Stripe Dashboard</td><td><code>dashboard.stripe.com</code></td></tr>
+                <tr><td>Variables d'env.</td><td>Fichier <code>.env</code> à la racine du projet (non commité)</td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+        <div class="lock-overlay" id="overlay-infra" onclick="openModal()">
+          <div class="lock-icon-wrap">🔐</div>
+          <div class="lock-lbl">Section protégée</div>
+          <div class="lock-hint2">Cliquer pour déverrouiller</div>
+        </div>
+      </div>
+    </div>
+
+  </div><!-- /container debrief -->
+</div><!-- /page debrief -->
+
+<!-- ══════════════════════════════════════════════════ FOOTER -->
+<div class="footer">
+  <em>NIGHTWATCH</em> — Documentation interne · Confidentiel · 21 mars 2026
+</div>
+
+<!-- ══════════════════════════════════════════════════ MODAL -->
+<div class="modal-backdrop" id="modalBackdrop">
+  <div class="modal">
+    <div class="modal-icon-wrap">🔐</div>
+    <h2>Sections protégées</h2>
+    <p>Ces sections contiennent des informations sensibles (infrastructure, accès, base de données). Entrez le mot de passe pour les déverrouiller.</p>
+    <input type="password" id="pwdInput" placeholder="• • • • • •" maxlength="20" autocomplete="off"
+           onkeydown="if(event.key==='Enter') tryUnlock()" oninput="clearErr()">
+    <div class="modal-err" id="modalErr"></div>
+    <button class="btn-unlock" onclick="tryUnlock()">🔓 Déverrouiller</button>
+    <button class="btn-cancel" onclick="closeModal()">Annuler</button>
+  </div>
+</div>
+
+<script>
+// ── NAVIGATION ────────────────────────────────────────────────────────────
+function showPage(id, btn) {
+  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+  document.querySelectorAll('.nav-tab').forEach(t => t.classList.remove('active'));
+  document.getElementById('page-' + id).classList.add('active');
+  btn.classList.add('active');
+}
+
+// ── TOAST ─────────────────────────────────────────────────────────────────
+function showToast(msg) {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.classList.add('show');
+  setTimeout(() => t.classList.remove('show'), 2000);
+}
+
+// ── COPIE COULEUR ─────────────────────────────────────────────────────────
+function copyColor(val, name) {
+  navigator.clipboard.writeText(val).then(() => {
+    showToast('✓ ' + name + ' — ' + val + ' copié !');
+  }).catch(() => {
+    // Fallback
+    const ta = document.createElement('textarea');
+    ta.value = val;
+    document.body.appendChild(ta);
+    ta.select();
+    document.execCommand('copy');
+    document.body.removeChild(ta);
+    showToast('✓ ' + val + ' copié !');
+  });
+}
+
+// ── MODAL ─────────────────────────────────────────────────────────────────
+let unlocked = false;
+
+function openModal() {
+  if (unlocked) return;
+  document.getElementById('modalBackdrop').classList.add('open');
+  setTimeout(() => document.getElementById('pwdInput').focus(), 100);
+}
+
+function closeModal() {
+  document.getElementById('modalBackdrop').classList.remove('open');
+  document.getElementById('pwdInput').value = '';
+  clearErr();
+}
+
+function clearErr() {
+  document.getElementById('modalErr').textContent = '';
+  document.getElementById('pwdInput').classList.remove('err');
+}
+
+async function sha256(str) {
+  const buf = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(str));
+  return Array.from(new Uint8Array(buf)).map(b => b.toString(16).padStart(2,'0')).join('');
+}
+
+async function tryUnlock() {
+  const pwd = document.getElementById('pwdInput').value;
+  const h = await sha256(pwd);
+  const correct = await sha256('1908');
+
+  if (h === correct) {
+    unlockAll();
+    closeModal();
+  } else {
+    const input = document.getElementById('pwdInput');
+    input.classList.add('err');
+    document.getElementById('modalErr').textContent = 'Mot de passe incorrect.';
+    input.value = '';
+    setTimeout(() => input.classList.remove('err'), 500);
+  }
+}
+
+function unlockAll() {
+  unlocked = true;
+  const zones    = ['zone-stack','zone-db','zone-infra'];
+  const overlays = ['overlay-stack','overlay-db','overlay-infra'];
+
+  zones.forEach((id, i) => {
+    setTimeout(() => {
+      document.getElementById(id).classList.remove('locked');
+      document.getElementById(overlays[i]).style.display = 'none';
+    }, i * 150);
+  });
+
+  const ls = document.getElementById('lockStatus');
+  ls.classList.add('unlocked');
+  document.getElementById('lockIcon').textContent = '🔓';
+  document.getElementById('lockText').textContent = 'Déverrouillé';
+  ls.onclick = null;
+  ls.style.cursor = 'default';
+  showToast('✓ Sections déverrouillées');
+}
+
+// Fermer en cliquant backdrop
+document.getElementById('modalBackdrop').addEventListener('click', function(e){
+  if(e.target === this) closeModal();
+});
+</script>
+
+</body>
+</html>
