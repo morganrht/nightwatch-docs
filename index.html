@@ -84,6 +84,25 @@ body{
 }
 .lock-status:hover{border-color:var(--violet);color:var(--violet)}
 .lock-status.unlocked{border-color:rgba(34,197,94,.4);color:var(--green)}
+.dl-btn{
+  display:flex;align-items:center;gap:6px;
+  padding:6px 14px;border-radius:999px;
+  border:1px solid rgba(14,165,233,.4);
+  background:rgba(14,165,233,.08);
+  color:var(--cyan);font-size:12px;font-weight:600;
+  cursor:pointer;transition:all .2s;white-space:nowrap;margin-left:10px;
+}
+.dl-btn:hover{background:rgba(14,165,233,.18);border-color:var(--cyan)}
+.dl-modal-success{
+  display:flex;flex-direction:column;align-items:center;gap:10px;
+}
+.dl-progress{
+  width:100%;background:rgba(14,165,233,.15);border-radius:999px;height:6px;overflow:hidden;margin-top:4px;
+}
+.dl-progress-bar{
+  height:6px;background:linear-gradient(90deg,var(--violet),var(--cyan));
+  border-radius:999px;width:0%;transition:width 1.2s ease;
+}
 
 /* ── PAGES ── */
 .page{display:none;animation:fade-in .3s ease}
@@ -418,6 +437,10 @@ pre{background:var(--card);border:1px solid var(--border);border-radius:10px;
     <button class="nav-tab" onclick="showPage('debrief',this)">📋 Débrief App</button>
   </div>
   <div class="nav-lock">
+    <div class="dl-btn" onclick="openDownloadModal()">
+      <span>⬇️</span>
+      <span id="dlBtnText">Investor Deck</span>
+    </div>
     <div class="lock-status" id="lockStatus" onclick="openModal()">
       <span id="lockIcon">🔒</span>
       <span id="lockText">Protégé</span>
@@ -1001,6 +1024,29 @@ box-shadow: 0 0 20px hsla(188, 86%, 43%, 0.2),
   <em>NIGHTWATCH</em> — Documentation interne · Confidentiel · 21 mars 2026
 </div>
 
+<!-- ══════════════════════════════════════════════════ DOWNLOAD MODAL -->
+<div class="modal-backdrop" id="downloadBackdrop">
+  <div class="modal">
+    <div id="dlLockView">
+      <div class="modal-icon-wrap">📊</div>
+      <h2>Investor Deck</h2>
+      <p>Ce document est confidentiel. Entrez le code d'accès pour télécharger la présentation investisseurs.</p>
+      <input type="password" id="dlPwdInput" placeholder="• • • • • •" maxlength="20" autocomplete="off"
+             onkeydown="if(event.key==='Enter') tryDownload()" oninput="clearDlErr()">
+      <div class="modal-err" id="dlModalErr"></div>
+      <button class="btn-unlock" onclick="tryDownload()">🔓 Accéder au téléchargement</button>
+      <button class="btn-cancel" onclick="closeDownloadModal()">Annuler</button>
+    </div>
+    <div id="dlSuccessView" style="display:none">
+      <div class="modal-icon-wrap" style="background:rgba(14,165,233,.15);border-color:rgba(14,165,233,.4)">✅</div>
+      <h2 style="color:var(--cyan)">Accès accordé !</h2>
+      <p>Téléchargement en cours…</p>
+      <div class="dl-progress"><div class="dl-progress-bar" id="dlProgressBar"></div></div>
+      <button class="btn-cancel" onclick="closeDownloadModal()" style="margin-top:16px">Fermer</button>
+    </div>
+  </div>
+</div>
+
 <!-- ══════════════════════════════════════════════════ MODAL -->
 <div class="modal-backdrop" id="modalBackdrop">
   <div class="modal">
@@ -1114,6 +1160,62 @@ function unlockAll() {
 // Fermer en cliquant backdrop
 document.getElementById('modalBackdrop').addEventListener('click', function(e){
   if(e.target === this) closeModal();
+});
+
+// ── TÉLÉCHARGEMENT PROTÉGÉ ─────────────────────────────────────────────────
+const DL_URL = 'NIGHTWATCH — Investor Deck 2026.pptx';
+
+function openDownloadModal() {
+  document.getElementById('downloadBackdrop').classList.add('open');
+  document.getElementById('dlLockView').style.display = '';
+  document.getElementById('dlSuccessView').style.display = 'none';
+  setTimeout(() => document.getElementById('dlPwdInput').focus(), 100);
+}
+
+function closeDownloadModal() {
+  document.getElementById('downloadBackdrop').classList.remove('open');
+  document.getElementById('dlPwdInput').value = '';
+  clearDlErr();
+}
+
+function clearDlErr() {
+  document.getElementById('dlModalErr').textContent = '';
+  document.getElementById('dlPwdInput').classList.remove('err');
+}
+
+async function tryDownload() {
+  const pwd = document.getElementById('dlPwdInput').value;
+  const h = await sha256(pwd);
+  const correct = await sha256('2008');
+
+  if (h === correct) {
+    // Show success view
+    document.getElementById('dlLockView').style.display = 'none';
+    document.getElementById('dlSuccessView').style.display = '';
+    // Animate progress bar
+    setTimeout(() => {
+      document.getElementById('dlProgressBar').style.width = '100%';
+    }, 50);
+    // Trigger download
+    setTimeout(() => {
+      const a = document.createElement('a');
+      a.href = DL_URL;
+      a.download = 'NIGHTWATCH — Investor Deck 2026.pptx';
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+    }, 400);
+  } else {
+    const input = document.getElementById('dlPwdInput');
+    input.classList.add('err');
+    document.getElementById('dlModalErr').textContent = 'Code incorrect.';
+    input.value = '';
+    setTimeout(() => input.classList.remove('err'), 500);
+  }
+}
+
+document.getElementById('downloadBackdrop').addEventListener('click', function(e){
+  if(e.target === this) closeDownloadModal();
 });
 </script>
 
