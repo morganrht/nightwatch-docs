@@ -103,6 +103,27 @@ body{
   height:6px;background:linear-gradient(90deg,var(--violet),var(--cyan));
   border-radius:999px;width:0%;transition:width 1.2s ease;
 }
+.btn-secondary{
+  width:100%;background:rgba(139,92,246,.12);
+  border:1px solid rgba(139,92,246,.3);border-radius:12px;padding:12px;
+  font-size:13px;font-weight:600;color:var(--violet);cursor:pointer;
+  font-family:inherit;transition:all .2s;margin-top:10px;
+}
+.btn-secondary:hover{background:rgba(139,92,246,.22);border-color:var(--violet)}
+.req-input{
+  width:100%;background:rgba(255,255,255,.05);border:1px solid var(--border);
+  border-radius:12px;padding:14px 18px;font-size:15px;font-family:inherit;
+  color:var(--white);text-align:center;outline:none;margin-bottom:10px;
+  transition:border-color .2s;
+}
+.req-input:focus{border-color:var(--violet)}
+.req-input.err{border-color:var(--red);animation:shake .3s ease}
+.status-badge{
+  display:inline-flex;align-items:center;gap:8px;
+  padding:8px 16px;border-radius:999px;font-size:12px;font-weight:600;
+  background:rgba(34,197,94,.12);border:1px solid rgba(34,197,94,.3);
+  color:var(--green);margin-bottom:14px;
+}
 
 /* ── PAGES ── */
 .page{display:none;animation:fade-in .3s ease}
@@ -1027,16 +1048,42 @@ box-shadow: 0 0 20px hsla(188, 86%, 43%, 0.2),
 <!-- ══════════════════════════════════════════════════ DOWNLOAD MODAL -->
 <div class="modal-backdrop" id="downloadBackdrop">
   <div class="modal">
-    <div id="dlLockView">
+
+    <!-- Vue 1 : Choix -->
+    <div id="dlChoiceView">
       <div class="modal-icon-wrap">📊</div>
       <h2>Investor Deck</h2>
-      <p>Ce document est confidentiel. Entrez le code d'accès pour télécharger la présentation investisseurs.</p>
+      <p>Présentation complète de Nightwatch pour investisseurs — confidentielle.</p>
+      <button class="btn-unlock" onclick="showView('dlCodeView')">🔑 J'ai un code d'accès</button>
+      <button class="btn-secondary" onclick="showView('dlRequestView')">📧 Demander l'accès</button>
+      <button class="btn-cancel" onclick="closeDownloadModal()">Fermer</button>
+    </div>
+
+    <!-- Vue 2a : Saisie du code -->
+    <div id="dlCodeView" style="display:none">
+      <div class="modal-icon-wrap">🔐</div>
+      <h2>Code d'accès</h2>
+      <p>Entrez votre code pour télécharger la présentation.</p>
       <input type="password" id="dlPwdInput" placeholder="• • • • • •" maxlength="20" autocomplete="off"
              onkeydown="if(event.key==='Enter') tryDownload()" oninput="clearDlErr()">
       <div class="modal-err" id="dlModalErr"></div>
-      <button class="btn-unlock" onclick="tryDownload()">🔓 Accéder au téléchargement</button>
-      <button class="btn-cancel" onclick="closeDownloadModal()">Annuler</button>
+      <button class="btn-unlock" onclick="tryDownload()">🔓 Télécharger</button>
+      <button class="btn-cancel" onclick="showView('dlChoiceView')">← Retour</button>
     </div>
+
+    <!-- Vue 2b : Demande d'accès -->
+    <div id="dlRequestView" style="display:none">
+      <div class="modal-icon-wrap" style="background:rgba(139,92,246,.15);border-color:rgba(139,92,246,.4)">✉️</div>
+      <h2>Demander l'accès</h2>
+      <p>Entrez votre adresse email. L'équipe Nightwatch étudiera votre demande et vous enverra le code si elle est approuvée.</p>
+      <input type="email" id="dlRequestEmail" class="req-input" placeholder="votre@email.com" autocomplete="email"
+             onkeydown="if(event.key==='Enter') submitAccessRequest()" oninput="clearReqErr()">
+      <div class="modal-err" id="reqModalErr"></div>
+      <button class="btn-unlock" onclick="submitAccessRequest()" id="dlReqBtn">📤 Envoyer la demande</button>
+      <button class="btn-cancel" onclick="showView('dlChoiceView')">← Retour</button>
+    </div>
+
+    <!-- Vue 3 : Téléchargement en cours -->
     <div id="dlSuccessView" style="display:none">
       <div class="modal-icon-wrap" style="background:rgba(14,165,233,.15);border-color:rgba(14,165,233,.4)">✅</div>
       <h2 style="color:var(--cyan)">Accès accordé !</h2>
@@ -1044,6 +1091,16 @@ box-shadow: 0 0 20px hsla(188, 86%, 43%, 0.2),
       <div class="dl-progress"><div class="dl-progress-bar" id="dlProgressBar"></div></div>
       <button class="btn-cancel" onclick="closeDownloadModal()" style="margin-top:16px">Fermer</button>
     </div>
+
+    <!-- Vue 4 : Demande envoyée -->
+    <div id="dlRequestSentView" style="display:none">
+      <div class="modal-icon-wrap" style="background:rgba(34,197,94,.15);border-color:rgba(34,197,94,.4)">📬</div>
+      <h2 style="color:var(--green)">Demande envoyée !</h2>
+      <div class="status-badge">✓ Email transmis à l'équipe</div>
+      <p id="dlRequestSentMsg">Votre demande a été transmise. Si elle est approuvée, vous recevrez le code par email dans les plus brefs délais.</p>
+      <button class="btn-cancel" onclick="closeDownloadModal()">Fermer</button>
+    </div>
+
   </div>
 </div>
 
@@ -1163,54 +1220,113 @@ document.getElementById('modalBackdrop').addEventListener('click', function(e){
 });
 
 // ── TÉLÉCHARGEMENT PROTÉGÉ ─────────────────────────────────────────────────
-const DL_URL = 'NIGHTWATCH — Investor Deck 2026.pptx';
+const DL_URL = 'NIGHTWATCH \u2014 Investor Deck 2026.pptx';
+const NOTIFY_EMAIL = 'morgan.reichertpro@gmail.com';
+
+function showView(id) {
+  ['dlChoiceView','dlCodeView','dlRequestView','dlSuccessView','dlRequestSentView'].forEach(v => {
+    document.getElementById(v).style.display = v === id ? '' : 'none';
+  });
+  if (id === 'dlCodeView') setTimeout(() => document.getElementById('dlPwdInput').focus(), 80);
+  if (id === 'dlRequestView') setTimeout(() => document.getElementById('dlRequestEmail').focus(), 80);
+}
 
 function openDownloadModal() {
   document.getElementById('downloadBackdrop').classList.add('open');
-  document.getElementById('dlLockView').style.display = '';
-  document.getElementById('dlSuccessView').style.display = 'none';
-  setTimeout(() => document.getElementById('dlPwdInput').focus(), 100);
+  showView('dlChoiceView');
 }
 
 function closeDownloadModal() {
   document.getElementById('downloadBackdrop').classList.remove('open');
   document.getElementById('dlPwdInput').value = '';
-  clearDlErr();
+  document.getElementById('dlRequestEmail').value = '';
+  clearDlErr(); clearReqErr();
+  document.getElementById('dlProgressBar').style.width = '0%';
 }
 
 function clearDlErr() {
   document.getElementById('dlModalErr').textContent = '';
   document.getElementById('dlPwdInput').classList.remove('err');
 }
+function clearReqErr() {
+  document.getElementById('reqModalErr').textContent = '';
+  document.getElementById('dlRequestEmail').classList.remove('err');
+}
 
 async function tryDownload() {
   const pwd = document.getElementById('dlPwdInput').value;
   const h = await sha256(pwd);
   const correct = await sha256('2008');
-
   if (h === correct) {
-    // Show success view
-    document.getElementById('dlLockView').style.display = 'none';
-    document.getElementById('dlSuccessView').style.display = '';
-    // Animate progress bar
-    setTimeout(() => {
-      document.getElementById('dlProgressBar').style.width = '100%';
-    }, 50);
-    // Trigger download
+    showView('dlSuccessView');
+    setTimeout(() => { document.getElementById('dlProgressBar').style.width = '100%'; }, 50);
     setTimeout(() => {
       const a = document.createElement('a');
       a.href = DL_URL;
-      a.download = 'NIGHTWATCH — Investor Deck 2026.pptx';
-      document.body.appendChild(a);
-      a.click();
-      document.body.removeChild(a);
-    }, 400);
+      a.download = DL_URL;
+      document.body.appendChild(a); a.click(); document.body.removeChild(a);
+    }, 500);
   } else {
     const input = document.getElementById('dlPwdInput');
     input.classList.add('err');
     document.getElementById('dlModalErr').textContent = 'Code incorrect.';
     input.value = '';
     setTimeout(() => input.classList.remove('err'), 500);
+  }
+}
+
+async function submitAccessRequest() {
+  const emailEl = document.getElementById('dlRequestEmail');
+  const email = emailEl.value.trim();
+  if (!email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+    emailEl.classList.add('err');
+    document.getElementById('reqModalErr').textContent = 'Adresse email invalide.';
+    setTimeout(() => emailEl.classList.remove('err'), 500);
+    return;
+  }
+
+  const btn = document.getElementById('dlReqBtn');
+  btn.disabled = true;
+  btn.textContent = '⏳ Envoi en cours…';
+
+  // Lien d'approbation pré-rempli pour Morgan (mailto:)
+  const approveSubject = encodeURIComponent('✅ Accès Nightwatch Investor Deck — Approuvé');
+  const approveBody = encodeURIComponent(
+    'Bonjour,\n\n' +
+    'Votre demande d\'accès au Nightwatch Investor Deck a été approuvée.\n\n' +
+    '🔑 Code de téléchargement : 2008\n\n' +
+    '🔗 Lien : https://morganrht.github.io/nightwatch-docs/\n\n' +
+    'Cliquez sur "⬇️ Investor Deck" puis sélectionnez "J\'ai un code d\'accès".\n\n' +
+    'Cordialement,\nNightwatch'
+  );
+  const approveLink = `mailto:${email}?subject=${approveSubject}&body=${approveBody}`;
+
+  // Email envoyé à Morgan via FormSubmit
+  try {
+    const res = await fetch('https://formsubmit.co/ajax/' + NOTIFY_EMAIL, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'Accept': 'application/json' },
+      body: JSON.stringify({
+        _subject: '🔑 Nouvelle demande accès Investor Deck — ' + email,
+        _template: 'box',
+        _captcha: 'false',
+        Demandeur: email,
+        Message: 'Nouvelle demande d\'accès au Nightwatch Investor Deck.',
+        'Approuver (cliquer pour envoyer le code)': approveLink,
+      })
+    });
+    const data = await res.json();
+    if (data.success === 'true' || data.success === true) {
+      document.getElementById('dlRequestSentMsg').textContent =
+        'Votre demande a été transmise à l\'équipe pour ' + email + '. Si elle est approuvée, vous recevrez le code par email.';
+      showView('dlRequestSentView');
+    } else {
+      throw new Error('FormSubmit error');
+    }
+  } catch(e) {
+    document.getElementById('reqModalErr').textContent = 'Erreur réseau. Réessayez.';
+    btn.disabled = false;
+    btn.textContent = '📤 Envoyer la demande';
   }
 }
 
