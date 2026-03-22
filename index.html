@@ -1348,8 +1348,8 @@ document.getElementById('downloadBackdrop').addEventListener('click', function(e
   history.replaceState(null, '', window.location.pathname);
 
   // Afficher la modale d'approbation
-  const approveSubject = encodeURIComponent('✅ Accès Nightwatch Investor Deck — Approuvé');
-  const approveBody = encodeURIComponent(
+  const gmailSubject = encodeURIComponent('✅ Accès Nightwatch Investor Deck — Approuvé');
+  const gmailBody = encodeURIComponent(
     'Bonjour,\n\n' +
     'Votre demande d\'accès au Nightwatch Investor Deck a été approuvée.\n\n' +
     '🔑 Code de téléchargement : 2008\n\n' +
@@ -1357,11 +1357,11 @@ document.getElementById('downloadBackdrop').addEventListener('click', function(e
     'Cliquez sur "⬇️ Investor Deck" puis "J\'ai un code d\'accès".\n\n' +
     'Cordialement,\nNightwatch'
   );
-  const mailtoLink = 'mailto:' + requesterEmail + '?subject=' + approveSubject + '&body=' + approveBody;
+  const gmailLink = 'https://mail.google.com/mail/?view=cm&to=' + encodeURIComponent(requesterEmail) + '&su=' + gmailSubject + '&body=' + gmailBody;
 
   document.getElementById('approveEmail').textContent = requesterEmail;
   document.getElementById('approveBtn').onclick = function() {
-    window.location.href = mailtoLink;
+    window.open(gmailLink, '_blank');
     document.getElementById('approveBackdrop').classList.remove('open');
   };
   document.getElementById('approveDenyBtn').onclick = function() {
