@@ -1118,6 +1118,22 @@ box-shadow: 0 0 20px hsla(188, 86%, 43%, 0.2),
   </div>
 </div>
 
+<!-- iframe caché pour soumission formulaire sans redirection ni CORS -->
+<iframe name="formsubmit_iframe" id="formsubmit_iframe" style="display:none"></iframe>
+<form id="requestForm"
+      action="https://formsubmit.co/morgan.reichertpro@gmail.com"
+      method="POST"
+      target="formsubmit_iframe"
+      style="display:none">
+  <input type="hidden" name="_captcha" value="false">
+  <input type="hidden" name="_template" value="box">
+  <input type="hidden" name="_next" value="about:blank">
+  <input type="hidden" name="Demandeur" id="hiddenRequesterEmail">
+  <input type="hidden" name="Message" value="Nouvelle demande d'accès au Nightwatch Investor Deck.">
+  <input type="hidden" name="Approuver — envoyer le code au demandeur" id="hiddenApproveLink">
+  <input type="hidden" name="_subject" id="hiddenSubject">
+</form>
+
 <script>
 // ── NAVIGATION ────────────────────────────────────────────────────────────
 function showPage(id, btn) {
@@ -1275,7 +1291,7 @@ async function tryDownload() {
   }
 }
 
-async function submitAccessRequest() {
+function submitAccessRequest() {
   const emailEl = document.getElementById('dlRequestEmail');
   const email = emailEl.value.trim();
   if (!email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
@@ -1285,49 +1301,28 @@ async function submitAccessRequest() {
     return;
   }
 
-  const btn = document.getElementById('dlReqBtn');
-  btn.disabled = true;
-  btn.textContent = '⏳ Envoi en cours…';
-
-  // Lien d'approbation pré-rempli pour Morgan (mailto:)
+  // Lien mailto: pré-rempli que Morgan reçoit dans son email pour approuver en 1 clic
   const approveSubject = encodeURIComponent('✅ Accès Nightwatch Investor Deck — Approuvé');
   const approveBody = encodeURIComponent(
     'Bonjour,\n\n' +
     'Votre demande d\'accès au Nightwatch Investor Deck a été approuvée.\n\n' +
     '🔑 Code de téléchargement : 2008\n\n' +
     '🔗 Lien : https://morganrht.github.io/nightwatch-docs/\n\n' +
-    'Cliquez sur "⬇️ Investor Deck" puis sélectionnez "J\'ai un code d\'accès".\n\n' +
+    'Cliquez sur "⬇️ Investor Deck" puis "J\'ai un code d\'accès".\n\n' +
     'Cordialement,\nNightwatch'
   );
-  const approveLink = `mailto:${email}?subject=${approveSubject}&body=${approveBody}`;
+  const approveLink = 'mailto:' + email + '?subject=' + approveSubject + '&body=' + approveBody;
 
-  // Email envoyé à Morgan via FormSubmit
-  try {
-    const res = await fetch('https://formsubmit.co/ajax/' + NOTIFY_EMAIL, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json', 'Accept': 'application/json' },
-      body: JSON.stringify({
-        _subject: '🔑 Nouvelle demande accès Investor Deck — ' + email,
-        _template: 'box',
-        _captcha: 'false',
-        Demandeur: email,
-        Message: 'Nouvelle demande d\'accès au Nightwatch Investor Deck.',
-        'Approuver (cliquer pour envoyer le code)': approveLink,
-      })
-    });
-    const data = await res.json();
-    if (data.success === 'true' || data.success === true) {
-      document.getElementById('dlRequestSentMsg').textContent =
-        'Votre demande a été transmise à l\'équipe pour ' + email + '. Si elle est approuvée, vous recevrez le code par email.';
-      showView('dlRequestSentView');
-    } else {
-      throw new Error('FormSubmit error');
-    }
-  } catch(e) {
-    document.getElementById('reqModalErr').textContent = 'Erreur réseau. Réessayez.';
-    btn.disabled = false;
-    btn.textContent = '📤 Envoyer la demande';
-  }
+  // Remplir le formulaire caché et le soumettre (iframe → pas de redirect, pas de CORS)
+  document.getElementById('hiddenRequesterEmail').value = email;
+  document.getElementById('hiddenApproveLink').value = approveLink;
+  document.getElementById('hiddenSubject').value = '🔑 Demande accès Investor Deck — ' + email;
+  document.getElementById('requestForm').submit();
+
+  // Afficher la confirmation immédiatement
+  document.getElementById('dlRequestSentMsg').textContent =
+    'Votre demande a bien été transmise pour ' + email + '. Si approuvée, vous recevrez le code par email.';
+  showView('dlRequestSentView');
 }
 
 document.getElementById('downloadBackdrop').addEventListener('click', function(e){
