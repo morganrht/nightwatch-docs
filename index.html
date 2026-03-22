@@ -1118,6 +1118,20 @@ box-shadow: 0 0 20px hsla(188, 86%, 43%, 0.2),
   </div>
 </div>
 
+<!-- ══════════════════════════════════════════════════ APPROVE MODAL -->
+<div class="modal-backdrop" id="approveBackdrop">
+  <div class="modal">
+    <div class="modal-icon-wrap" style="background:rgba(34,197,94,.15);border-color:rgba(34,197,94,.4)">✅</div>
+    <h2>Approuver l'accès</h2>
+    <p>Envoyer le code <strong style="color:var(--cyan)">2008</strong> à :</p>
+    <p style="font-size:15px;font-weight:700;color:var(--white);margin-bottom:20px;word-break:break-all" id="approveEmail"></p>
+    <button class="btn-unlock" id="approveBtn" style="background:linear-gradient(135deg,var(--green),#16a34a)">
+      📧 Ouvrir Gmail et envoyer le code
+    </button>
+    <button class="btn-cancel" id="approveDenyBtn">Refuser</button>
+  </div>
+</div>
+
 <!-- iframe caché pour soumission formulaire sans redirection ni CORS -->
 <iframe name="formsubmit_iframe" id="formsubmit_iframe" style="display:none"></iframe>
 <form id="requestForm"
@@ -1301,17 +1315,8 @@ function submitAccessRequest() {
     return;
   }
 
-  // Lien mailto: pré-rempli que Morgan reçoit dans son email pour approuver en 1 clic
-  const approveSubject = encodeURIComponent('✅ Accès Nightwatch Investor Deck — Approuvé');
-  const approveBody = encodeURIComponent(
-    'Bonjour,\n\n' +
-    'Votre demande d\'accès au Nightwatch Investor Deck a été approuvée.\n\n' +
-    '🔑 Code de téléchargement : 2008\n\n' +
-    '🔗 Lien : https://morganrht.github.io/nightwatch-docs/\n\n' +
-    'Cliquez sur "⬇️ Investor Deck" puis "J\'ai un code d\'accès".\n\n' +
-    'Cordialement,\nNightwatch'
-  );
-  const approveLink = 'mailto:' + email + '?subject=' + approveSubject + '&body=' + approveBody;
+  // Lien HTTPS cliquable dans l'email de Morgan → ouvre la page avec ?approve=email encodé
+  const approveLink = 'https://morganrht.github.io/nightwatch-docs/?approve=' + btoa(email);
 
   // Remplir le formulaire caché et le soumettre (iframe → pas de redirect, pas de CORS)
   document.getElementById('hiddenRequesterEmail').value = email;
@@ -1328,6 +1333,42 @@ function submitAccessRequest() {
 document.getElementById('downloadBackdrop').addEventListener('click', function(e){
   if(e.target === this) closeDownloadModal();
 });
+
+// ── APPROBATION D'ACCÈS (?approve=BASE64_EMAIL) ────────────────────────────
+(function() {
+  const params = new URLSearchParams(window.location.search);
+  const encoded = params.get('approve');
+  if (!encoded) return;
+
+  let requesterEmail;
+  try { requesterEmail = atob(encoded); } catch(e) { return; }
+  if (!requesterEmail || !requesterEmail.includes('@')) return;
+
+  // Nettoyer l'URL sans recharger
+  history.replaceState(null, '', window.location.pathname);
+
+  // Afficher la modale d'approbation
+  const approveSubject = encodeURIComponent('✅ Accès Nightwatch Investor Deck — Approuvé');
+  const approveBody = encodeURIComponent(
+    'Bonjour,\n\n' +
+    'Votre demande d\'accès au Nightwatch Investor Deck a été approuvée.\n\n' +
+    '🔑 Code de téléchargement : 2008\n\n' +
+    '🔗 Lien : https://morganrht.github.io/nightwatch-docs/\n\n' +
+    'Cliquez sur "⬇️ Investor Deck" puis "J\'ai un code d\'accès".\n\n' +
+    'Cordialement,\nNightwatch'
+  );
+  const mailtoLink = 'mailto:' + requesterEmail + '?subject=' + approveSubject + '&body=' + approveBody;
+
+  document.getElementById('approveEmail').textContent = requesterEmail;
+  document.getElementById('approveBtn').onclick = function() {
+    window.location.href = mailtoLink;
+    document.getElementById('approveBackdrop').classList.remove('open');
+  };
+  document.getElementById('approveDenyBtn').onclick = function() {
+    document.getElementById('approveBackdrop').classList.remove('open');
+  };
+  document.getElementById('approveBackdrop').classList.add('open');
+})();
 </script>
 
 </body>
